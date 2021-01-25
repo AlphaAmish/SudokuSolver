@@ -7,6 +7,35 @@ namespace SudokuSolver
     public class Board
     {
         public List<Cell> Cells { get; set; }
+        public bool AllCellsVerified 
+        {
+            get
+            {
+                foreach (Cell cell in Cells)
+                {
+                    if (!cell.Verified)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        public bool AllCellsFilled
+        {
+            get
+            {
+                foreach (Cell cell in Cells)
+                {
+                    if (!cell.Digit.HasValue)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
 
         public Board() 
         {
