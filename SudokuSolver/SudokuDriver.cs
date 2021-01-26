@@ -354,12 +354,5 @@ namespace SudokuSolver
                 SolveSubgrid(subgrid);
             }
         }
-
-        public enum BoardPieceType
-        {
-            Row,
-            Column,
-            Subgrid
-        }
     }
 }
