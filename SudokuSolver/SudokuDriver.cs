@@ -24,11 +24,9 @@ namespace SudokuSolver
                 }
                 else
                 {
-                    //Any row, column, or subgrid missing only one digit?
                     int? rowMissingOneDigit = RowMissingOneDigit();
                     if (rowMissingOneDigit != null && rowMissingOneDigit.HasValue)
                     {
-                        //fill the missing digit
                         SolveRow(rowMissingOneDigit.Value);
                     }
                     else
@@ -47,7 +45,7 @@ namespace SudokuSolver
                             }
                             else
                             {
-                                //Find row, column, or subgrid missing the least amount of digits
+                                TrySolvingAnyBoardPiece();
                             }
                         }
                     }
@@ -177,7 +175,9 @@ namespace SudokuSolver
                     subgridDigits = SubgridDigits(cell);
                     foreach (int missingDigit in missingDigits)
                     {
-                        if (!columnDigits.Contains(missingDigit) && !subgridDigits.Contains(missingDigit))
+                        if (!columnDigits.Contains(missingDigit) && 
+                            !subgridDigits.Contains(missingDigit) &&
+                            !cell.PossibleDigits.Contains(missingDigit))
                         {
                             cell.PossibleDigits.Add(missingDigit);
                         }
@@ -210,7 +210,9 @@ namespace SudokuSolver
                     subgridDigits = SubgridDigits(cell);
                     foreach (int missingDigit in missingDigits)
                     {
-                        if (!rowDigits.Contains(missingDigit) && !subgridDigits.Contains(missingDigit))
+                        if (!rowDigits.Contains(missingDigit) && 
+                            !subgridDigits.Contains(missingDigit) &&
+                            !cell.PossibleDigits.Contains(missingDigit))
                         {
                             cell.PossibleDigits.Add(missingDigit);
                         }
@@ -234,7 +236,30 @@ namespace SudokuSolver
             List<int> missingDigits = RequiredDigits.Except(subgridDigits).ToList();
             List<int> rowDigits = new List<int>();
             List<int> columnDigits = new List<int>();
-            
+
+            foreach (Cell cell in subgridCells)
+            {
+                if (!cell.Digit.HasValue)
+                {
+                    rowDigits = RowDigits(cell);
+                    columnDigits = ColumnDigits(cell);
+                    foreach (int missingDigit in missingDigits)
+                    {
+                        if (!rowDigits.Contains(missingDigit) && 
+                            !columnDigits.Contains(missingDigit) &&
+                            !cell.PossibleDigits.Contains(missingDigit))
+                        {
+                            cell.PossibleDigits.Add(missingDigit);
+                        }
+                    }
+                }
+            }
+
+            bool solvedOne = false;
+            do
+            {
+                solvedOne = VerifiyPossibleDigits(subgridCells, missingDigits);
+            } while (solvedOne);
         }
 
         private List<int> SubgridDigits(Cell cell)
@@ -276,6 +301,7 @@ namespace SudokuSolver
             {
                 c.PossibleDigits.Remove(digit);
             }
+            cell.PossibleDigits.Clear();
         }
 
         private bool VerifiyPossibleDigits(List<Cell> cellList, List<int> missingDigits)
@@ -289,6 +315,7 @@ namespace SudokuSolver
                     cell.Digit = digit;
                     cell.Verified = true;
                     ClearPossibleDigits(cell, digit);
+                    missingDigits.Remove(digit);
                     return true;
                 }
             }
@@ -302,11 +329,37 @@ namespace SudokuSolver
                     cells[0].Digit = missingDigit;
                     cells[0].Verified = true;
                     ClearPossibleDigits(cells[0], missingDigit);
+                    missingDigits.Remove(missingDigit);
                     return true;
                 }
             }
             
             return false;
+        }
+
+        private void TrySolvingAnyBoardPiece()
+        {
+            for (int row = 0; row < 9; row++)
+            {
+                SolveRow(row);
+            }
+
+            for (int column = 0; column < 9; column++)
+            {
+                SolveColumn(column);
+            }
+
+            for (int subgrid = 0; subgrid < 9; subgrid++)
+            {
+                SolveSubgrid(subgrid);
+            }
+        }
+
+        public enum BoardPieceType
+        {
+            Row,
+            Column,
+            Subgrid
         }
     }
 }
